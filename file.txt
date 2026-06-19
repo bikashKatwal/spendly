@@ -1,7 +1,40 @@
-Add two links to the footer in @templates/base.html
-- "Terma and Conditions"
-- "Privacy Policy"
+Add a "See how it works" video modal to templates/landing.html
 
-Both should be plain text links, no special stylng needed for now
-Point both to "#" as placeholder hrefs since the pages don't exists yet
-Do not modify anything else on the page
+1. Update the "See how it works" button in the hero section:
+   - Add id="howItWorksBtn" to the button
+   - Change href to "#" so it does not navigate away
+
+2. Add a modal overlay at the bottom of {% block content %} (before {% endblock %}):
+   - Outer div: class="modal-overlay" id="howItWorksModal"
+   - Inner div: class="modal-box"
+   - A close button: class="modal-close" id="modalClose" with &times; as content
+   - An iframe: id="howItWorksVideo", src="" (empty on load),
+     data-src="https://www.youtube.com/embed/VIDEO_ID?enablejsapi=1"
+   - Do NOT set src on the iframe in HTML — must be empty until modal opens
+
+3. Add modal CSS to static/css/landing.css:
+   - .modal-overlay: display:none, position:fixed, inset:0, dark semi-transparent
+     background (rgba 0,0,0,0.8), z-index above page content, flex centering
+   - .modal-overlay.is-open: display:flex (toggled by JS)
+   - .modal-box: relative, max-width ~860px, aspect-ratio 16/9, black background,
+     border-radius, overflow:hidden, box-shadow
+   - .modal-box iframe: width/height 100%, border:none, display:block
+   - .modal-close: positioned above the box (top:-2.75rem right:0), white text,
+     no background or border, large font-size, opacity transition on hover
+
+4. Add vanilla JS in {% block scripts %} at the bottom of landing.html
+   (no libraries — plain JS only, wrapped in an IIFE):
+   - openModal(): set iframe.src = iframe.dataset.src, add .is-open to overlay,
+     set document.body.style.overflow = 'hidden'
+   - closeModal(): remove .is-open from overlay, set iframe.src = '' (stops video),
+     restore document.body.style.overflow = ''
+   - Trigger openModal on #howItWorksBtn click (preventDefault)
+   - Trigger closeModal on #modalClose click
+   - Trigger closeModal when clicking the overlay itself (e.target === overlay)
+   - Trigger closeModal on Escape keydown (only when modal is open)
+
+5. Do not modify any other file or section outside:
+   - The "See how it works" button (hero section, landing.html)
+   - The modal HTML block (landing.html)
+   - The {% block scripts %} block (landing.html)
+   - static/css/landing.css

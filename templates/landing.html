@@ -24,7 +24,7 @@
         </p>
         <div class="hero-actions">
             <a href="{{ url_for('register') }}" class="btn-primary">Create free account</a>
-            <a href="{{ url_for('login') }}" class="btn-ghost">See how it works</a>
+            <a href="#" id="howItWorksBtn" class="btn-ghost">See how it works</a>
         </div>
     </div>
     <div class="hero-visual">
@@ -105,4 +105,57 @@
     </div>
 </section>
 
+<!-- Video modal -->
+<div class="modal-overlay" id="howItWorksModal" role="dialog" aria-modal="true" aria-label="How it works video">
+    <div class="modal-box">
+        <button class="modal-close" id="modalClose" aria-label="Close video">&times;</button>
+        <iframe
+            id="howItWorksVideo"
+            src=""
+            data-src="https://www.youtube.com/embed/dQw4w9WgXcQ?enablejsapi=1"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+        ></iframe>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    var btn     = document.getElementById('howItWorksBtn');
+    var overlay = document.getElementById('howItWorksModal');
+    var closeBtn = document.getElementById('modalClose');
+    var iframe  = document.getElementById('howItWorksVideo');
+
+    function openModal() {
+        iframe.src = iframe.dataset.src;
+        overlay.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+        overlay.classList.remove('is-open');
+        iframe.src = '';
+        document.body.style.overflow = '';
+    }
+
+    btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        openModal();
+    });
+
+    closeBtn.addEventListener('click', closeModal);
+
+    overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) closeModal();
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeModal();
+    });
+}());
+</script>
 {% endblock %}
