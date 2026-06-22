@@ -1,5 +1,6 @@
-from flask import Flask, render_template
-from database.db import get_db, init_db, seed_db
+from flask import Flask, render_template, request, redirect, url_for
+from werkzeug.security import generate_password_hash
+from database.db import get_db, init_db, seed_db, create_user, get_user_by_email
 
 app = Flask(__name__)
 
@@ -13,9 +14,29 @@ def landing():
     return render_template("landing.html")
 
 
-@app.route("/register")
+@app.route("/register", methods=["GET", "POST"])
 def register():
-    return render_template("register.html")
+    if request.method == "GET":
+        return render_template("register.html")
+
+    name     = request.form.get("name", "").strip()
+    email    = request.form.get("email", "").strip().lower()
+    password = request.form.get("password", "")
+    confirm  = request.form.get("confirm_password", "")
+
+    if not name:
+        return render_template("register.html", error="Name is required"), 400
+    if not email:
+        return render_template("register.html", error="Email is required"), 400
+    if not password:
+        return render_template("register.html", error="Password is required"), 400
+    if password != confirm:
+        return render_template("register.html", error="Passwords do not match"), 400
+    if get_user_by_email(email):
+        return render_template("register.html", error="Email already registered"), 400
+
+    create_user(name, email, generate_password_hash(password))
+    return redirect(url_for("login"))
 
 
 @app.route("/login")
