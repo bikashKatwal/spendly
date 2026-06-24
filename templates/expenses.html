@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}My Expenses — Spendly{% endblock %}
+
+{% block content %}
+<section class="expenses-section">
+  <div class="expenses-inner">
+
+    <div class="expenses-header">
+      <h1 class="expenses-title">My Expenses</h1>
+      <a href="{{ url_for('profile') }}" class="btn-ghost">Back to profile</a>
+    </div>
+
+    {% if expenses %}
+    <table class="expenses-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Category</th>
+          <th>Amount</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for expense in expenses %}
+        <tr>
+          <td class="col-date">{{ expense.date }}</td>
+          <td><span class="category-badge">{{ expense.category }}</span></td>
+          <td class="col-amount">${{ "%.2f"|format(expense.amount) }}</td>
+          <td class="col-desc">{{ expense.description }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <i data-lucide="inbox"></i>
+      <p>No expenses yet.</p>
+      <a href="{{ url_for('add_expense') }}" class="btn-primary">Add your first expense</a>
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>lucide.createIcons();</script>
+{% endblock %}
