@@ -3,8 +3,13 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from database.db import (
     get_db, init_db, seed_db,
     create_user, get_user_by_email,
-    get_user_by_id, get_expense_summary,
     get_expenses_for_user,
+)
+from database.queries import (
+    get_user_by_id as get_user_profile,
+    get_summary_stats,
+    get_recent_transactions,
+    get_category_breakdown,
 )
 
 app = Flask(__name__)
@@ -98,32 +103,24 @@ def profile():
     if not user_id:
         return redirect(url_for("login"))
 
-    user    = get_user_by_id(user_id)
-    summary = get_expense_summary(user_id)
+    user         = get_user_profile(user_id)
+    summary      = get_summary_stats(user_id)
+    transactions = get_recent_transactions(user_id, limit=10)
+    breakdown    = get_category_breakdown(user_id)
 
     from datetime import datetime
-    raw_date = user["created_at"]
-    try:
-        member_since = datetime.strptime(raw_date, "%Y-%m-%d %H:%M:%S").strftime("%B %d, %Y").replace(" 0", " ")
-    except ValueError:
-        member_since = raw_date
-
-    latest = summary["latest_date"]
-    if latest:
+    for tx in transactions:
         try:
-            latest_display = datetime.strptime(latest, "%Y-%m-%d").strftime("%B %d, %Y").replace(" 0", " ")
-        except ValueError:
-            latest_display = latest
-    else:
-        latest_display = None
+            tx["date"] = datetime.strptime(tx["date"], "%Y-%m-%d").strftime("%B %d, %Y").replace(" 0", " ")
+        except (ValueError, KeyError):
+            pass
 
     return render_template(
         "profile.html",
-        user          = user,
-        member_since  = member_since,
-        expense_count = summary["count"],
-        expense_total = summary["total"],
-        latest_date   = latest_display,
+        user         = user,
+        summary      = summary,
+        transactions = transactions,
+        breakdown    = breakdown,
     )
 
 
