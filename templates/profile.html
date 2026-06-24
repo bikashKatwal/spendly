@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Profile — Spendly{% endblock %}
+
+{% block content %}
+<section class="profile-section">
+  <div class="profile-inner">
+
+    <div class="profile-header">
+      <div class="profile-avatar">
+        <i data-lucide="user"></i>
+      </div>
+      <div class="profile-identity">
+        <h1 class="profile-name">{{ user["name"] }}</h1>
+        <p class="profile-email">{{ user["email"] }}</p>
+        <p class="profile-since">Member since {{ member_since }}</p>
+      </div>
+    </div>
+
+    <div class="profile-stats">
+      <div class="stat-card">
+        <div class="stat-icon"><i data-lucide="receipt"></i></div>
+        <div class="stat-body">
+          <span class="stat-label">Total expenses</span>
+          <span class="stat-value">{{ expense_count }}</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i data-lucide="wallet"></i></div>
+        <div class="stat-body">
+          <span class="stat-label">Amount spent</span>
+          <span class="stat-value">${{ "%.2f"|format(expense_total) }}</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i data-lucide="calendar"></i></div>
+        <div class="stat-body">
+          <span class="stat-label">Last expense</span>
+          <span class="stat-value">
+            {% if latest_date %}{{ latest_date }}{% else %}No expenses yet{% endif %}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-actions">
+      <a href="{{ url_for('logout') }}" class="btn-ghost">Sign out</a>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>lucide.createIcons();</script>
+{% endblock %}

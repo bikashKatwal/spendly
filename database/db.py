@@ -21,6 +21,37 @@ def get_user_by_email(email):
     return row
 
 
+def get_user_by_id(user_id):
+    conn = get_db()
+    row = conn.execute(
+        "SELECT id, name, email, created_at FROM users WHERE id = ?",
+        (user_id,)
+    ).fetchone()
+    conn.close()
+    return row
+
+
+def get_expense_summary(user_id):
+    conn = get_db()
+    row = conn.execute(
+        """
+        SELECT
+            COUNT(*)                   AS count,
+            COALESCE(SUM(amount), 0.0) AS total,
+            MAX(date)                  AS latest_date
+        FROM expenses
+        WHERE user_id = ?
+        """,
+        (user_id,)
+    ).fetchone()
+    conn.close()
+    return {
+        "count":       row["count"],
+        "total":       row["total"],
+        "latest_date": row["latest_date"],
+    }
+
+
 def create_user(name, email, password_hash):
     conn = get_db()
     conn.execute(

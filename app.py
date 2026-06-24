@@ -1,6 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
-from database.db import get_db, init_db, seed_db, create_user, get_user_by_email
+from database.db import (
+    get_db, init_db, seed_db,
+    create_user, get_user_by_email,
+    get_user_by_id, get_expense_summary,
+)
 
 app = Flask(__name__)
 app.secret_key = "spendly-dev-secret"
@@ -89,7 +93,37 @@ def logout():
 
 @app.route("/profile")
 def profile():
-    return "Profile page — coming in Step 4"
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect(url_for("login"))
+
+    user    = get_user_by_id(user_id)
+    summary = get_expense_summary(user_id)
+
+    from datetime import datetime
+    raw_date = user["created_at"]
+    try:
+        member_since = datetime.strptime(raw_date, "%Y-%m-%d %H:%M:%S").strftime("%B %d, %Y").replace(" 0", " ")
+    except ValueError:
+        member_since = raw_date
+
+    latest = summary["latest_date"]
+    if latest:
+        try:
+            latest_display = datetime.strptime(latest, "%Y-%m-%d").strftime("%B %d, %Y").replace(" 0", " ")
+        except ValueError:
+            latest_display = latest
+    else:
+        latest_display = None
+
+    return render_template(
+        "profile.html",
+        user          = user,
+        member_since  = member_since,
+        expense_count = summary["count"],
+        expense_total = summary["total"],
+        latest_date   = latest_display,
+    )
 
 
 @app.route("/expenses/add")
