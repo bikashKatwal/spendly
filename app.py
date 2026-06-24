@@ -4,6 +4,7 @@ from database.db import (
     get_db, init_db, seed_db,
     create_user, get_user_by_email,
     get_user_by_id, get_expense_summary,
+    get_expenses_for_user,
 )
 
 app = Flask(__name__)
@@ -124,6 +125,31 @@ def profile():
         expense_total = summary["total"],
         latest_date   = latest_display,
     )
+
+
+@app.route("/expenses")
+def expenses():
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect(url_for("login"))
+
+    from datetime import datetime
+    rows = get_expenses_for_user(user_id)
+    expenses_display = []
+    for row in rows:
+        try:
+            date_fmt = datetime.strptime(row["date"], "%Y-%m-%d").strftime("%B %d, %Y").replace(" 0", " ")
+        except ValueError:
+            date_fmt = row["date"]
+        expenses_display.append({
+            "id":          row["id"],
+            "date":        date_fmt,
+            "category":    row["category"],
+            "amount":      row["amount"],
+            "description": row["description"] or "",
+        })
+
+    return render_template("expenses.html", expenses=expenses_display)
 
 
 @app.route("/expenses/add")

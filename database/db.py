@@ -52,6 +52,21 @@ def get_expense_summary(user_id):
     }
 
 
+def get_expenses_for_user(user_id):
+    conn = get_db()
+    rows = conn.execute(
+        """
+        SELECT id, amount, category, date, description
+        FROM expenses
+        WHERE user_id = ?
+        ORDER BY date DESC, id DESC
+        """,
+        (user_id,)
+    ).fetchall()
+    conn.close()
+    return rows
+
+
 def create_user(name, email, password_hash):
     conn = get_db()
     conn.execute(
