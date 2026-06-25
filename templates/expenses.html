@@ -11,6 +11,26 @@
       <a href="{{ url_for('profile') }}" class="btn-ghost">Back to profile</a>
     </div>
 
+    <form class="filter-form" method="get" action="{{ url_for('expenses') }}">
+      <div class="filter-fields">
+        <label>
+          From
+          <input type="date" name="date_from" value="{{ date_from }}">
+        </label>
+        <label>
+          To
+          <input type="date" name="date_to" value="{{ date_to }}">
+        </label>
+        <button type="submit" class="btn-primary">Filter</button>
+        {% if filtered %}
+        <a href="{{ url_for('expenses') }}" class="btn-ghost">Clear</a>
+        {% endif %}
+      </div>
+      {% if filtered %}
+      <p class="filter-notice">Showing filtered results</p>
+      {% endif %}
+    </form>
+
     {% if expenses %}
     <table class="expenses-table">
       <thead>
