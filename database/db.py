@@ -52,17 +52,22 @@ def get_expense_summary(user_id):
     }
 
 
-def get_expenses_for_user(user_id):
+def get_expenses_for_user(user_id, date_from=None, date_to=None):
     conn = get_db()
-    rows = conn.execute(
-        """
-        SELECT id, amount, category, date, description
-        FROM expenses
-        WHERE user_id = ?
-        ORDER BY date DESC, id DESC
-        """,
-        (user_id,)
-    ).fetchall()
+    clauses = ["user_id = ?"]
+    params = [user_id]
+    if date_from:
+        clauses.append("date >= ?")
+        params.append(date_from)
+    if date_to:
+        clauses.append("date <= ?")
+        params.append(date_to)
+    query = (
+        "SELECT id, amount, category, date, description FROM expenses"
+        f" WHERE {' AND '.join(clauses)}"
+        " ORDER BY date DESC, id DESC"
+    )
+    rows = conn.execute(query, params).fetchall()
     conn.close()
     return rows
 

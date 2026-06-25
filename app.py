@@ -1,3 +1,5 @@
+import re
+from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from database.db import (
@@ -124,14 +126,22 @@ def profile():
     )
 
 
+
+_DATE_RE = re.compile(r'^\d{4}-\d{2}-\d{2}$')
+
+
 @app.route("/expenses")
 def expenses():
     user_id = session.get("user_id")
     if not user_id:
         return redirect(url_for("login"))
 
-    from datetime import datetime
-    rows = get_expenses_for_user(user_id)
+    raw_from  = request.args.get("date_from", "").strip()
+    raw_to    = request.args.get("date_to", "").strip()
+    date_from = raw_from if _DATE_RE.match(raw_from) else None
+    date_to   = raw_to   if _DATE_RE.match(raw_to)   else None
+
+    rows = get_expenses_for_user(user_id, date_from=date_from, date_to=date_to)
     expenses_display = []
     for row in rows:
         try:
@@ -146,7 +156,13 @@ def expenses():
             "description": row["description"] or "",
         })
 
-    return render_template("expenses.html", expenses=expenses_display)
+    return render_template(
+        "expenses.html",
+        expenses=expenses_display,
+        date_from=date_from or "",
+        date_to=date_to or "",
+        filtered=bool(date_from or date_to),
+    )
 
 
 @app.route("/expenses/add")
