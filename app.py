@@ -6,6 +6,7 @@ from database.db import (
     get_db, init_db, seed_db,
     create_user, get_user_by_email,
     get_expenses_for_user,
+    create_expense,
 )
 from database.queries import (
     get_user_by_id as get_user_profile,
@@ -128,6 +129,7 @@ def profile():
 
 
 _DATE_RE = re.compile(r'^\d{4}-\d{2}-\d{2}$')
+_CATEGORIES = ["Food", "Transport", "Bills", "Health", "Entertainment", "Shopping", "Other"]
 
 
 @app.route("/expenses")
@@ -165,9 +167,54 @@ def expenses():
     )
 
 
-@app.route("/expenses/add")
+@app.route("/expenses/add", methods=["GET", "POST"])
 def add_expense():
-    return "Add expense — coming in Step 7"
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect(url_for("login"))
+
+    if request.method == "GET":
+        return render_template(
+            "add_expense.html",
+            categories=_CATEGORIES,
+            today=datetime.today().strftime("%Y-%m-%d"),
+        )
+
+    amount_raw  = request.form.get("amount", "").strip()
+    category    = request.form.get("category", "").strip()
+    date_raw    = request.form.get("date", "").strip()
+    description = request.form.get("description", "").strip() or None
+
+    def err(msg):
+        return render_template(
+            "add_expense.html",
+            categories=_CATEGORIES,
+            error=msg,
+            amount=amount_raw,
+            category=category,
+            date=date_raw,
+            description=description or "",
+        ), 400
+
+    try:
+        amount = float(amount_raw)
+        if amount <= 0:
+            raise ValueError
+    except (ValueError, TypeError):
+        return err("Amount must be a positive number")
+
+    if category not in _CATEGORIES:
+        return err("Please select a valid category")
+
+    if not _DATE_RE.match(date_raw):
+        return err("Date must be in YYYY-MM-DD format")
+    try:
+        datetime.strptime(date_raw, "%Y-%m-%d")
+    except ValueError:
+        return err("Date must be in YYYY-MM-DD format")
+
+    create_expense(user_id, amount, category, date_raw, description)
+    return redirect(url_for("expenses"))
 
 
 @app.route("/expenses/<int:id>/edit")
