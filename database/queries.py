@@ -7,7 +7,7 @@ def get_recent_transactions(user_id, limit=10):
     conn = get_db()
     rows = conn.execute(
         """
-        SELECT date, description, category, amount
+        SELECT id, date, description, category, amount
         FROM expenses
         WHERE user_id = ?
         ORDER BY date DESC, id DESC
@@ -18,6 +18,7 @@ def get_recent_transactions(user_id, limit=10):
     conn.close()
     return [
         {
+            "id":          row["id"],
             "date":        row["date"],
             "description": row["description"] or "",
             "category":    row["category"],

@@ -7,6 +7,8 @@ from database.db import (
     create_user, get_user_by_email,
     get_expenses_for_user,
     create_expense,
+    get_expense_by_id,
+    update_expense,
 )
 from database.queries import (
     get_user_by_id as get_user_profile,
@@ -217,9 +219,63 @@ def add_expense():
     return redirect(url_for("expenses"))
 
 
-@app.route("/expenses/<int:id>/edit")
+@app.route("/expenses/<int:id>/edit", methods=["GET", "POST"])
 def edit_expense(id):
-    return "Edit expense — coming in Step 8"
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect(url_for("login"))
+
+    expense = get_expense_by_id(id)
+    if expense is None:
+        abort(404)
+    if expense["user_id"] != user_id:
+        abort(403)
+
+    if request.method == "GET":
+        return render_template(
+            "edit_expense.html",
+            categories=_CATEGORIES,
+            expense=expense,
+        )
+
+    amount_raw  = request.form.get("amount", "").strip()
+    category    = request.form.get("category", "").strip()
+    date_raw    = request.form.get("date", "").strip()
+    description = request.form.get("description", "").strip() or None
+
+    def err(msg):
+        return render_template(
+            "edit_expense.html",
+            categories=_CATEGORIES,
+            error=msg,
+            expense={
+                "id":          id,
+                "amount":      amount_raw,
+                "category":    category,
+                "date":        date_raw,
+                "description": description or "",
+            },
+        ), 400
+
+    try:
+        amount = float(amount_raw)
+        if amount <= 0:
+            raise ValueError
+    except (ValueError, TypeError):
+        return err("Amount must be a positive number")
+
+    if category not in _CATEGORIES:
+        return err("Please select a valid category")
+
+    if not _DATE_RE.match(date_raw):
+        return err("Date must be in YYYY-MM-DD format")
+    try:
+        datetime.strptime(date_raw, "%Y-%m-%d")
+    except ValueError:
+        return err("Date must be in YYYY-MM-DD format")
+
+    update_expense(id, amount, category, date_raw, description)
+    return redirect(url_for("expenses"))
 
 
 @app.route("/expenses/<int:id>/delete")
